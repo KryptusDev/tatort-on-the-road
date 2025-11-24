@@ -1,0 +1,5 @@
+testfiles/
+output/
+__pycache__/
+.git/
+.env
