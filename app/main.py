@@ -2,20 +2,33 @@ import os
 import logging
 import time
 import random
+import argparse
 from app.analyzer import SceneAnalyzer
 from app.video_processor import VideoProcessor
+from app.video_editor import VideoEditor
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def main():
+    parser = argparse.ArgumentParser(description="Tatort on the Road - Scene Extractor")
+    parser.add_argument("input_path", help="Path to the input video file")
+    parser.add_argument("--output-dir", default="output", help="Directory for output files")
+    
+    args = parser.parse_args()
+    
     start_total = time.time()
-    video_path = "testfiles/tatort3.mp4"
+    video_path = args.input_path
+    output_dir = args.output_dir
+
     if not os.path.exists(video_path):
         logging.error(f"File not found: {video_path}")
         return
+    
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
-    logging.info("Initializing Tatort on the Road...")
+    logging.info(f"Initializing Tatort on the Road for file: {video_path}")
     
     try:
         analyzer = SceneAnalyzer()
@@ -74,10 +87,6 @@ def main():
         # Optimization: If surrounded by candidates, everything is positive, no need to scan
         # (The neighbors will handle the filling of the gaps)
         if has_left_neighbor and has_right_neighbor:
-            # Just ensure the intervals are marked (redundant but safe)
-            # Actually, we can just skip, because the Left Neighbor handled [Left -> Curr]
-            # and the Right Neighbor will handle [Curr -> Right] (when we iterate to it? No, Right Neighbor looks Left)
-            # Let's be explicit to be safe:
             # Mark Left Interval [Curr-5, Curr] as positive
             start_t = int(current_time - buffer)
             end_t = int(current_time)
@@ -215,8 +224,10 @@ def main():
 
     # --- Video Generation ---
     start_video = time.time()
-    from app.video_editor import VideoEditor
-    output_file = f"output/result{random.randint(1, 100)}.mp4"
+    
+    output_filename = f"result_{os.path.basename(video_path).rsplit('.', 1)[0]}_{int(time.time())}.mp4"
+    output_file = os.path.join(output_dir, output_filename)
+    
     editor = VideoEditor(video_path, output_file)
     try:
         editor.create_summary_video(final_scenes)
