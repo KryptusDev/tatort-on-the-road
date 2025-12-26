@@ -1,14 +1,9 @@
+# Core video processing
 torch
 transformers
-pillow
 opencv-python-headless
 ffmpeg-python
+pillow
+
+# Utilities
 numpy
-yt-dlp
-requests
-beautifulsoup4
-python-dotenv
-schedule
-python-telegram-bot
-tweepy
-Mastodon.py

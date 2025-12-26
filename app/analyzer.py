@@ -1,7 +1,8 @@
-import torch
-from transformers import CLIPProcessor, CLIPModel
-from PIL import Image
 import logging
+
+import torch
+from PIL import Image
+from transformers import CLIPModel, CLIPProcessor
 
 class SceneAnalyzer:
     def __init__(self, model_name="openai/clip-vit-base-patch32", device=None):

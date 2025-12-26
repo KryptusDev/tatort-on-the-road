@@ -1,6 +1,7 @@
-import ffmpeg
 import logging
 import os
+
+import ffmpeg
 
 class VideoEditor:
     def __init__(self, input_path, output_path):

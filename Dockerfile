@@ -19,3 +19,4 @@ COPY . .
 
 # Default command
 CMD ["python", "-m", "app.main"]
+

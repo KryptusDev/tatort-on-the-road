@@ -1,6 +1,7 @@
+import logging
+
 import cv2
 from PIL import Image
-import logging
 
 class VideoProcessor:
     def __init__(self, video_path):
