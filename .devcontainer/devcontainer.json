@@ -1,0 +1,44 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/python
+{
+	"name": "Tatort on the Road",
+	"image": "mcr.microsoft.com/devcontainers/python:2-3.14-trixie",
+
+	// Add ffmpeg system dependency for video processing
+	"features": {
+		"ghcr.io/devcontainers/features/common-utils:2": {
+			"installZsh": false,
+			"upgradePackages": true
+		}
+	},
+
+	// Install system packages and Python dependencies
+	"postCreateCommand": "sudo apt-get update && sudo apt-get install -y ffmpeg && pip3 install --user -r requirements.txt",
+
+	// Mount testfiles folder for test video access
+	"mounts": [
+		"source=/apps/dev/tatort-on-the-road/testfiles,target=/workspace/testfiles,type=bind"
+	],
+
+	// Configure tool-specific properties
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"ms-python.debugpy"
+			],
+			"settings": {
+				"python.defaultInterpreterPath": "/usr/local/bin/python",
+				"python.linting.enabled": true,
+				"python.linting.pylintEnabled": true,
+				"[python]": {
+					"editor.formatOnSave": true,
+					"editor.defaultFormatter": "ms-python.pyanthon"
+				}
+			}
+		}
+	},
+
+	"remoteUser": "vscode"
+}
