@@ -20,6 +20,12 @@
 		"source=/apps/dev/tatort-on-the-road/testfiles,target=/workspace/testfiles,type=bind"
 	],
 
+	// Attach to n8n_net docker network
+	"runArgs": [
+		"--network",
+		"n8n_net"
+	],
+
 	// Configure tool-specific properties
 	"customizations": {
 		"vscode": {

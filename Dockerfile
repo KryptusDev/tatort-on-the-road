@@ -2,6 +2,11 @@ FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
 
 WORKDIR /workspace
 
+# Add metadata labels
+LABEL maintainer="Tatort on the Road"
+LABEL description="AI-powered car scene extraction for video analysis"
+LABEL version="1.0.0"
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     python3.11 \

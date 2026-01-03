@@ -31,4 +31,8 @@ output/*.avi
 testfiles/*.mp4
 testfiles/*.avi
 downloads/
+uploads/*.mp4
+uploads/*.avi
+uploads/*.mov
+uploads/*.mkv
 

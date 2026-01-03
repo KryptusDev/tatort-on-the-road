@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 # Create FastAPI app
 app = FastAPI(
     title="Tatort on the Road API",
-    description="AI-powered scene extraction for video analysis",
+    description="AI-powered car scene extraction for video analysis",
     version="1.0.0"
 )
 
@@ -116,7 +116,7 @@ async def root():
     return {
         "name": "Tatort on the Road API",
         "version": "1.0.0",
-        "description": "AI-powered scene extraction for video analysis",
+        "description": "AI-powered car scene extraction for video analysis",
         "docs": "/docs",
         "endpoints": {
             "health": "GET /health",

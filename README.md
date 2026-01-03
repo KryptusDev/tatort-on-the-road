@@ -1,124 +1,223 @@
 # Tatort on the Road
 
-Automated scene extraction for Tatort episodes using AI-powered video analysis.
+AI-powered car scene extraction for video analysis. Automatically identifies and extracts driving scenes from videos using CLIP (Contrastive Language-Image Pre-training) for intelligent scene detection.
 
 ## Features
 
-- **Intelligent Scene Detection**: Uses CLIP (Contrastive Language-Image Pre-training) to identify driving scenes
-- **Two-Pass Analysis**: Coarse scan (5s intervals) followed by fine scan (1s intervals) for precise boundaries
-- **Batch Processing**: Optimized frame processing with batch inference for faster analysis
-- **Video Summary Generation**: Creates a concise summary video containing only the detected scenes
+- 🎯 **Intelligent Scene Detection**: CLIP-based AI identifies driving scenes with high accuracy
+- 🔄 **Two-Pass Analysis**: Coarse scan (5s) + fine scan (1s) for precise scene boundaries
+- ⚡ **Batch Processing**: Optimized GPU inference for fast processing
+- 🎬 **Video Summary Generation**: Creates highlight reels from detected scenes
+- 🌐 **REST API**: FastAPI server with async task processing
+- 📊 **Detailed Statistics**: Scene count, duration, and coverage metrics
 
-## Requirements
+## Quick Start
 
-- Python 3.10+
-- CUDA-capable GPU (optional, will fall back to CPU)
-- Docker & Docker Compose (for containerized deployment)
+### With Dev Container (Recommended)
 
-## Installation
-
-### Local Setup
+If you're in a dev container, the API is ready to start:
 
 ```bash
+bash start-api.sh
+```
+
+The API will be available at `http://localhost:8000`
+
+### Local Installation
+
+```bash
+# Install dependencies
 pip install -r requirements.txt
-```
 
-### Docker Setup
+# Start the API server
+python -m app.api_server
 
-```bash
-docker-compose build
-```
-
-## Usage
-
-### Command Line
-
-Process a single video file and extract driving scenes:
-
-```bash
-python -m app.main <input_video_path> [--output-dir <output_directory>]
-```
-
-**Arguments:**
-- `input_video_path`: Path to the video file to process (e.g., `testfiles/video.mp4`)
-- `--output-dir`: (Optional) Directory for output files. Defaults to `output/`
-
-**Example:**
-
-```bash
-python -m app.main testfiles/sample.mp4 --output-dir output
+# Or use the CLI directly
+python -m app.main testfiles/video.mp4 --output-dir output
 ```
 
 ### Docker
 
 ```bash
-docker-compose run --rm tatort-app python -m app.main testfiles/video.mp4 --output-dir output
+# Build and start the API server
+docker-compose up --build
+
+# Or process a video directly
+docker-compose run --rm tatort-app python -m app.main testfiles/video.mp4
+```
+
+## Usage
+
+### REST API
+
+The API server provides asynchronous video processing. See [API_DOCUMENTATION.md](API_DOCUMENTATION.md) for detailed endpoint documentation.
+
+**Quick Example:**
+
+```bash
+# Check API health
+curl http://localhost:8000/health
+
+# Submit video for analysis
+curl -X POST http://localhost:8000/analyze \
+  -F "file=@video.mp4"
+
+# Check task status
+curl http://localhost:8000/tasks/{task_id}
+
+# Download processed video
+curl http://localhost:8000/tasks/{task_id}/download -o result.mp4
+```
+
+### Command Line Interface
+
+Process videos directly from the command line:
+
+```bash
+python -m app.main <video_path> [--output-dir <directory>]
+```
+
+**Examples:**
+
+```bash
+# Basic usage
+python -m app.main testfiles/sample.mp4
+
+# Custom output directory
+python -m app.main video.mp4 --output-dir /path/to/output
+
+# Docker
+docker-compose run --rm tatort-app python -m app.main testfiles/video.mp4
 ```
 
 ## How It Works
 
-### Pass 1: Coarse Scan
-- Samples frames at 5-second intervals
-- Uses CLIP to score each frame against positive prompts (driving scenes) and negative prompts (non-driving scenes)
-- Identifies candidate time ranges containing target scenes
+### 1. Coarse Scan (Pass 1)
+- Samples frames every 5 seconds
+- CLIP model scores each frame against driving scene prompts
+- Identifies candidate time ranges
 
-### Pass 2: Fine Scan
-- Refines boundaries with 1-second interval sampling
-- Uses batch processing for efficiency
-- Groups adjacent positive frames into complete scenes
+### 2. Fine Scan (Pass 2)
+- Refines boundaries with 1-second intervals
+- Batch processes frames for efficiency
+- Groups adjacent positive frames into scenes
 
-### Post-Processing
-- Filters out short scenes (< 2 seconds)
-- Handles small gaps between scenes (< 2 seconds)
-- Generates statistics about detected content
+### 3. Post-Processing
+- Filters scenes shorter than 2 seconds
+- Merges scenes with small gaps (<2s)
+- Generates comprehensive statistics
 
-### Output Generation
-- Creates a summary video concatenating all detected scenes
-- Preserves original audio and video quality
-- Outputs statistics: number of scenes, total duration, video coverage percentage
+### 4. Output Generation
+- Creates summary video with all detected scenes
+- Preserves original quality and audio
+- Outputs: scene count, total duration, coverage percentage
 
-## Directory Structure
+## Requirements
+
+- **Python**: 3.10 or higher
+- **GPU**: CUDA-capable GPU (optional, falls back to CPU)
+- **Disk Space**: ~2-3x the source video size for processing
+- **Docker**: Optional, for containerized deployment
+
+## Configuration
+
+Adjust detection parameters in [app/processor_workflow.py](app/processor_workflow.py):
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `THRESHOLD` | 0.22 | CLIP score threshold for scene detection |
+| `STEP_COARSE` | 5.0s | Coarse scan interval |
+| `STEP_FINE` | 1.0s | Fine scan interval |
+| `BATCH_SIZE` | 8 | Frames per batch for parallel processing |
+| `MIN_SCENE_DURATION` | 2.0s | Minimum scene length |
+
+## Project Structure
 
 ```
+tatort-on-the-road/
 ├── app/
 │   ├── __init__.py
+│   ├── api_server.py         # FastAPI REST API
 │   ├── analyzer.py           # CLIP-based scene analyzer
 │   ├── main.py               # CLI entry point
-│   ├── processor_workflow.py  # Shared processing logic
-│   ├── video_processor.py     # Video frame extraction
-│   └── video_editor.py        # Video composition & export
-├── testfiles/                # Sample video files for testing
-├── output/                   # Output directory for processed videos
+│   ├── processor_workflow.py # Processing pipeline
+│   ├── video_processor.py    # Frame extraction
+│   └── video_editor.py       # Video composition
+├── testfiles/                # Sample videos
+├── output/                   # Processed videos
+├── uploads/                  # API upload directory
 ├── requirements.txt          # Python dependencies
 ├── Dockerfile               # Container configuration
-└── docker-compose.yml       # Docker Compose configuration
+├── docker-compose.yml       # Multi-container setup
+├── start-api.sh             # API startup script
+└── README.md                # This file
 ```
 
 ## Output
 
-For each processed video, you'll get:
-- **Summary Video**: `result_<filename>_<timestamp>.mp4` - Concatenated driving scenes
-- **Console Logs**: Statistics about detected scenes (number, total duration, coverage percentage)
+### CLI Mode
+- `result_<filename>_<timestamp>.mp4` - Summary video with all scenes
+- Console statistics: scene count, duration, coverage
 
-## Performance Notes
+### API Mode
+- Async task tracking with status updates
+- Downloadable result videos via `/tasks/{task_id}/download`
+- JSON response with detailed statistics
 
-- GPU processing significantly speeds up CLIP inference
-- Initial model loading takes ~5-10 seconds (one-time per run)
-- Processing speed: ~10-15 FPS for coarse scan, ~5-10 FPS for fine scan
-- Total processing time depends on video length and number of detected scenes
+## Performance
 
-## Configuration
+- **Model Loading**: ~5-10 seconds (first run only)
+- **Processing Speed**: 
+  - Coarse scan: ~10-15 FPS
+  - Fine scan: ~5-10 FPS
+- **Total Time**: Depends on video length and scene complexity
+  - 5-min video: ~2-5 minutes
+  - 30-min video: ~15-30 minutes
 
-Tuning parameters can be adjusted in `app/processor_workflow.py`:
-- `THRESHOLD`: CLIP score threshold for scene detection (default: 0.22)
-- `STEP_COARSE`: Coarse scan interval in seconds (default: 5.0)
-- `STEP_FINE`: Fine scan interval in seconds (default: 1.0)
-- `BATCH_SIZE`: Number of frames to process in parallel (default: 8)
-- `MIN_SCENE_DURATION`: Minimum scene length in seconds (default: 2.0)
+**GPU vs CPU**: GPU processing is 3-5x faster than CPU
 
-## Limitations
+## API Documentation
 
-- Works best with content that matches the trained positive/negative prompts
-- Requires sufficient disk space for processing (plan for 2-3x source video size during processing)
-- Best results with 720p or higher resolution videos
+See [API_DOCUMENTATION.md](API_DOCUMENTATION.md) for:
+- Complete endpoint reference
+- Request/response schemas
+- Integration examples
+- Error handling
+- Task lifecycle management
+
+## Troubleshooting
+
+**API won't start**: Check if port 8000 is available: `lsof -i :8000`
+
+**Out of memory**: Reduce `BATCH_SIZE` in [app/processor_workflow.py](app/processor_workflow.py)
+
+**No scenes detected**: Lower `THRESHOLD` value (try 0.18-0.20)
+
+**Slow processing**: Ensure GPU is available and CUDA is properly installed
+
+**Docker issues**: Check logs with `docker-compose logs -f`
+
+## Development
+
+```bash
+# Install in development mode
+pip install -e .
+
+# Run tests (if available)
+pytest
+
+# Format code
+black app/
+
+# Type checking
+mypy app/
+```
+
+## License
+
+See LICENSE file for details.
+
+## Contributing
+
+Contributions welcome! Please open an issue or submit a pull request.
 
